@@ -1,0 +1,282 @@
+{% extends 'widgets/widget_template.html' %}
+{% load custom_template %}
+{% block custom_title_prop %}
+  {% if title_logo %}
+    style="background-size: auto 60%; background-position: 50%; background-repeat: no-repeat; background-image: url('/app_resource/{{ title_logo }}');"
+  {% endif %}
+{% endblock %}
+{% block title1 %}{{ title1 }}{% endblock %}
+{% block title2 %}{{ title2 }}{% endblock %}
+{% block custom_tools %}{% endblock %}
+{% block widget_content %}
+  <!-- Main Start Block -->
+  <!-- File: opencti_list_cases.html
+  Copyright (c) 2025 Filigran
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software distributed under
+  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  either express or implied. See the License for the specific language governing permissions
+  and limitations under the License.
+-->
+  <style>
+    .opencti-app a:hover {
+        text-decoration:underline;
+    }
+
+    .opencti-app .wf-table-horizontal {
+        border: 1px solid;
+        font-size: 12px;
+    }
+
+    .opencti-app .wf-table-horizontal th {
+        text-align: center;
+        border: 1px solid;
+        text-transform: uppercase;
+        font-weight: normal;
+        padding: 5px;
+    }
+
+    .opencti-app .wf-table-horizontal td {
+        border: 1px solid;
+        padding: 5px;
+        padding-left: 4px;
+    }
+
+    .opencti-app .wf-h3-style {
+        font-size : 20px
+    }
+
+    .opencti-app .wf-h4-style {
+        font-size : 16px
+    }
+
+    .opencti-no-wrap {
+        white-space:nowrap;
+    }
+
+    .opencti-case-type {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+
+    .opencti-case-incident {
+        background-color: #f44336;
+        color: white;
+    }
+
+    .opencti-case-rfi {
+        background-color: #2196f3;
+        color: white;
+    }
+
+    .opencti-case-rft {
+        background-color: #ff9800;
+        color: white;
+    }
+
+    .opencti-priority {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-weight: bold;
+    }
+
+    .opencti-priority-critical {
+        background-color: #b71c1c;
+        color: white;
+    }
+
+    .opencti-priority-high {
+        background-color: #d32f2f;
+        color: white;
+    }
+
+    .opencti-priority-medium {
+        background-color: #ff9800;
+        color: white;
+    }
+
+    .opencti-priority-low {
+        background-color: #4caf50;
+        color: white;
+    }
+
+    .opencti-severity {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 3px;
+    }
+
+    .opencti-severity-critical {
+        background-color: #ffebee;
+        color: #c62828;
+        font-weight: bold;
+    }
+
+    .opencti-severity-high {
+        background-color: #fff3e0;
+        color: #e65100;
+        font-weight: bold;
+    }
+
+    .opencti-severity-medium {
+        background-color: #fffde7;
+        color: #f57f17;
+    }
+
+    .opencti-severity-low {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+    }
+
+  </style>
+  <div class="opencti-app"
+       style="overflow: auto;
+              width: 100%;
+              height: 100%;
+              padding-left:10px;
+              padding-right:10px">
+    <!-- Main Div -->
+    {% for result in results %}
+      <!-- loop for each result -->
+      <br>
+      <!------------------- For each Result ---------------------->
+      {% if not result.data %}
+        <h4 class="wf-h4-style">No cases found</h4>
+      {% else %}
+        <h3 class="wf-h3-style">OpenCTI Cases</h3>
+        <div class="metadata_div">
+          <!--Default View-->
+          <div class="panel-group" id="case-information">
+            <div class="panel">
+              <div id="default-view-table" class="panel-collapse collapse in">
+                <table class="wf-table-horizontal datatable">
+                  <thead>
+                    <tr>
+                      <th>NAME</th>
+                      <th>TYPE</th>
+                      <th>PRIORITY</th>
+                      <th>SEVERITY</th>
+                      <th>ASSIGNEE</th>
+                      <th>LABELS</th>
+                      <th>CREATED</th>
+                      <th>UPDATED</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for case in result.data %}
+                      <tr>
+                        <td>
+                          <a href="javascript:;"
+                             onclick="context_menu(this, [{'contains': ['opencti case id'], 'value': '{{ case.id }}' }], 0, {{ container.id }}, null, false);">
+                            <strong>{{ case.name|default:"Unnamed Case" }}</strong>
+                            &nbsp;<span class="fa fa-caret-down" style="font-size: smaller;"></span>
+                          </a>
+                          {% if case.description %}
+                            <br><small style="color: #666;">{{ case.description|truncatechars:100 }}</small>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if case.case_type == "incident" %}
+                            <span class="opencti-case-type opencti-case-incident">INCIDENT</span>
+                          {% elif case.case_type == "rfi" %}
+                            <span class="opencti-case-type opencti-case-rfi">RFI</span>
+                          {% elif case.case_type == "rft" %}
+                            <span class="opencti-case-type opencti-case-rft">RFT</span>
+                          {% else %}
+                            <span class="opencti-case-type" style="background-color: #9e9e9e; color: white;">{{ case.case_type|upper|default:"UNKNOWN" }}</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if case.priority == "P1" %}
+                            <span class="opencti-priority opencti-priority-critical">P1</span>
+                          {% elif case.priority == "P2" %}
+                            <span class="opencti-priority opencti-priority-high">P2</span>
+                          {% elif case.priority == "P3" %}
+                            <span class="opencti-priority opencti-priority-medium">P3</span>
+                          {% elif case.priority == "P4" %}
+                            <span class="opencti-priority opencti-priority-low">P4</span>
+                          {% else %}
+                            <span style="color: #999;">{{ case.priority|default:"N/A" }}</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if case.severity == "critical" %}
+                            <span class="opencti-severity opencti-severity-critical">Critical</span>
+                          {% elif case.severity == "high" %}
+                            <span class="opencti-severity opencti-severity-high">High</span>
+                          {% elif case.severity == "medium" %}
+                            <span class="opencti-severity opencti-severity-medium">Medium</span>
+                          {% elif case.severity == "low" %}
+                            <span class="opencti-severity opencti-severity-low">Low</span>
+                          {% else %}
+                            <span style="color: #999;">{{ case.severity|default:"N/A" }}</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if case.objectAssignee %}
+                            {% for assignee in case.objectAssignee %}
+                              {{ assignee.name }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                          {% else %}
+                            <span style="color: #999;">Unassigned</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if case.objectLabel %}
+                            {% for label in case.objectLabel %}
+                              <span style="background-color: #e0e0e0; padding: 2px 6px; border-radius: 3px; margin: 2px; display: inline-block;">{{ label.value }}</span>
+                            {% endfor %}
+                          {% else %}
+                            <span style="color: #999;">None</span>
+                          {% endif %}
+                        </td>
+                        <td>{{ case.created|default:"-" }}</td>
+                        <td>{{ case.modified|default:"-" }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <br>
+      {% endif %}
+    {% endfor %}
+    <!-- loop for each result end -->
+  </div>
+  <!-- Main Div -->
+  <script>
+    $.extend(true, $.fn.dataTable.defaults, {
+        "searching": true,
+        "bLengthChange": false,
+        "ordering": true,
+        "language": {
+            "paginate": {
+                "previous": "<i class='fa fa-angle-left fa-lg'></i>",
+                "next": "<i class='fa fa-angle-right fa-lg'></i>"
+            }
+        },
+        "dom": '<"top">rt<"bottom"p><"clear">',
+        drawCallback: function(settings) {
+            var pagination = $(this).closest('.dataTables_wrapper').find('.dataTables_paginate');
+            pagination.toggle(this.api().page.info().pages > 1);
+        }
+    });
+    $.fn.DataTable.ext.pager.numbers_length = 5;
+    $('.datatable').DataTable({
+        order: [[6, "desc"]]  // Sort by Created date by default
+    });
+  </script>
+{% endblock %}
+<!-- Main Start Block -->

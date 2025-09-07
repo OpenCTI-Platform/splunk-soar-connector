@@ -1,0 +1,1889 @@
+{
+    "appid": "2d7c4f8a-1b3e-4a5c-9d7f-6e8b3a2c5d9e",
+    "name": "OpenCTI",
+    "description": "Integrates OpenCTI Threat Intelligence Platform with Splunk SOAR for threat intelligence management and incident response",
+    "publisher": "Filigran",
+    "contributors": [
+        {
+            "name": "Filigran Team"
+        }
+    ],
+    "package_name": "opencti",
+    "type": "threat intelligence",
+    "license": "Apache 2.0",
+    "main_module": "opencti_connector.py",
+    "view_module": "opencti_view.py",
+    "app_version": "1.0.0",
+    "utctime_updated": "2025-01-07T12:00:00.000000Z",
+    "product_vendor": "Filigran",
+    "product_name": "OpenCTI",
+    "product_version_regex": ".*",
+    "min_phantom_version": "6.1.1",
+    "logo": "logo_opencti.svg",
+    "logo_dark": "logo_opencti_dark.svg",
+    "python_version": "3.9, 3.12",
+    "fips_compliant": false,
+    "latest_tested_versions": [
+        "OpenCTI Cloud, Version: 6.7.17, January 2025"
+    ],
+    "configuration": {
+        "url": {
+            "description": "OpenCTI Server URL (e.g., https://opencti.example.com)",
+            "data_type": "string",
+            "required": true,
+            "order": 0
+        },
+        "api_token": {
+            "description": "OpenCTI API Token",
+            "data_type": "password",
+            "required": true,
+            "order": 1
+        },
+        "ssl_verify": {
+            "description": "Verify SSL Certificate",
+            "data_type": "boolean",
+            "default": true,
+            "order": 2
+        }
+    },
+    "actions": [
+        {
+            "action": "test connectivity",
+            "description": "Validate the asset configuration for connectivity",
+            "type": "test",
+            "identifier": "test_connectivity",
+            "read_only": true,
+            "parameters": {},
+            "output": [],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "list indicators",
+            "description": "List indicators from OpenCTI",
+            "type": "investigate",
+            "identifier": "list_indicators",
+            "read_only": true,
+            "parameters": {
+                "limit": {
+                    "description": "Maximum number of indicators to retrieve",
+                    "data_type": "numeric",
+                    "default": 50,
+                    "order": 0
+                },
+                "search": {
+                    "description": "Search term to filter indicators",
+                    "data_type": "string",
+                    "order": 1
+                },
+                "indicator_types": {
+                    "description": "Comma-separated list of indicator types to filter (e.g., IPv4-Addr,Domain-Name,URL)",
+                    "data_type": "string",
+                    "order": 2
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.limit",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.parameter.search",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.indicator_types",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.pattern",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.indicator_types",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.valid_from",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.valid_until",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.x_opencti_score",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.summary.total_indicators",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string",
+                    "example_values": [
+                        "success",
+                        "failed"
+                    ]
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "summary.total_objects",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "summary.total_objects_successful",
+                    "data_type": "numeric"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "create indicator",
+            "description": "Create an indicator in OpenCTI",
+            "type": "generic",
+            "identifier": "create_indicator",
+            "read_only": false,
+            "parameters": {
+                "pattern": {
+                    "description": "STIX pattern for the indicator (e.g., [ipv4-addr:value = '192.168.1.1'])",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "name": {
+                    "description": "Name of the indicator",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 1
+                },
+                "indicator_type": {
+                    "description": "Type of the indicator (e.g., IPv4-Addr, Domain-Name, URL)",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 2
+                },
+                "description": {
+                    "description": "Description of the indicator",
+                    "data_type": "string",
+                    "order": 3
+                },
+                "valid_from": {
+                    "description": "Start date of indicator validity (ISO format)",
+                    "data_type": "string",
+                    "order": 4
+                },
+                "valid_until": {
+                    "description": "End date of indicator validity (ISO format)",
+                    "data_type": "string",
+                    "order": 5
+                },
+                "score": {
+                    "description": "Threat score (0-100)",
+                    "data_type": "numeric",
+                    "order": 6
+                },
+                "labels": {
+                    "description": "Comma-separated list of labels",
+                    "data_type": "string",
+                    "order": 7
+                },
+                "marking_definitions": {
+                    "description": "Comma-separated list of marking definitions (e.g., TLP:GREEN,TLP:AMBER)",
+                    "data_type": "string",
+                    "order": 8
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.pattern",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.indicator_type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.indicator_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "get indicator",
+            "description": "Get a specific indicator from OpenCTI by ID",
+            "type": "investigate",
+            "identifier": "get_indicator",
+            "read_only": true,
+            "parameters": {
+                "indicator_id": {
+                    "description": "ID of the indicator to retrieve",
+                    "data_type": "string",
+                    "required": true,
+                    "primary": true,
+                    "order": 0
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.indicator_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.pattern",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.indicator_found",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "create intrusion set",
+            "description": "Create an intrusion set in OpenCTI",
+            "type": "generic",
+            "identifier": "create_intrusion_set",
+            "read_only": false,
+            "parameters": {
+                "name": {
+                    "description": "Name of the intrusion set",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "description": {
+                    "description": "Description of the intrusion set",
+                    "data_type": "string",
+                    "order": 1
+                },
+                "aliases": {
+                    "description": "Comma-separated list of aliases",
+                    "data_type": "string",
+                    "order": 2
+                },
+                "first_seen": {
+                    "description": "First seen date (ISO format)",
+                    "data_type": "string",
+                    "order": 3
+                },
+                "last_seen": {
+                    "description": "Last seen date (ISO format)",
+                    "data_type": "string",
+                    "order": 4
+                },
+                "goals": {
+                    "description": "Comma-separated list of goals",
+                    "data_type": "string",
+                    "order": 5
+                },
+                "resource_level": {
+                    "description": "Resource level (individual, club, contest, team, organization, government)",
+                    "data_type": "string",
+                    "value_list": [
+                        "individual",
+                        "club",
+                        "contest",
+                        "team",
+                        "organization",
+                        "government"
+                    ],
+                    "order": 6
+                },
+                "primary_motivation": {
+                    "description": "Primary motivation",
+                    "data_type": "string",
+                    "value_list": [
+                        "accidental",
+                        "coercion",
+                        "dominance",
+                        "ideology",
+                        "notoriety",
+                        "organizational-gain",
+                        "personal-gain",
+                        "personal-satisfaction",
+                        "revenge",
+                        "unpredictable"
+                    ],
+                    "order": 7
+                },
+                "secondary_motivations": {
+                    "description": "Comma-separated list of secondary motivations",
+                    "data_type": "string",
+                    "order": 8
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.intrusion_set_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "create malware",
+            "description": "Create a malware in OpenCTI",
+            "type": "generic",
+            "identifier": "create_malware",
+            "read_only": false,
+            "parameters": {
+                "name": {
+                    "description": "Name of the malware",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "description": {
+                    "description": "Description of the malware",
+                    "data_type": "string",
+                    "order": 1
+                },
+                "aliases": {
+                    "description": "Comma-separated list of aliases",
+                    "data_type": "string",
+                    "order": 2
+                },
+                "malware_types": {
+                    "description": "Comma-separated list of malware types (e.g., backdoor,ransomware,trojan)",
+                    "data_type": "string",
+                    "order": 3
+                },
+                "is_family": {
+                    "description": "Whether this represents a malware family",
+                    "data_type": "boolean",
+                    "default": false,
+                    "order": 4
+                },
+                "architecture_execution_envs": {
+                    "description": "Comma-separated list of architecture execution environments",
+                    "data_type": "string",
+                    "order": 5
+                },
+                "implementation_languages": {
+                    "description": "Comma-separated list of implementation languages",
+                    "data_type": "string",
+                    "order": 6
+                },
+                "capabilities": {
+                    "description": "Comma-separated list of capabilities",
+                    "data_type": "string",
+                    "order": 7
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.malware_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "create threat actor",
+            "description": "Create a threat actor in OpenCTI",
+            "type": "generic",
+            "identifier": "create_threat_actor",
+            "read_only": false,
+            "parameters": {
+                "name": {
+                    "description": "Name of the threat actor",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "threat_actor_types": {
+                    "description": "Comma-separated list of threat actor types (e.g., nation-state,criminal,hacktivist)",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 1
+                },
+                "description": {
+                    "description": "Description of the threat actor",
+                    "data_type": "string",
+                    "order": 2
+                },
+                "aliases": {
+                    "description": "Comma-separated list of aliases",
+                    "data_type": "string",
+                    "order": 3
+                },
+                "first_seen": {
+                    "description": "First seen date (ISO format)",
+                    "data_type": "string",
+                    "order": 4
+                },
+                "last_seen": {
+                    "description": "Last seen date (ISO format)",
+                    "data_type": "string",
+                    "order": 5
+                },
+                "roles": {
+                    "description": "Comma-separated list of roles",
+                    "data_type": "string",
+                    "order": 6
+                },
+                "goals": {
+                    "description": "Comma-separated list of goals",
+                    "data_type": "string",
+                    "order": 7
+                },
+                "sophistication": {
+                    "description": "Sophistication level",
+                    "data_type": "string",
+                    "value_list": [
+                        "none",
+                        "minimal",
+                        "intermediate",
+                        "advanced",
+                        "expert",
+                        "innovator",
+                        "strategic"
+                    ],
+                    "order": 8
+                },
+                "resource_level": {
+                    "description": "Resource level",
+                    "data_type": "string",
+                    "value_list": [
+                        "individual",
+                        "club",
+                        "contest",
+                        "team",
+                        "organization",
+                        "government"
+                    ],
+                    "order": 9
+                },
+                "primary_motivation": {
+                    "description": "Primary motivation",
+                    "data_type": "string",
+                    "value_list": [
+                        "accidental",
+                        "coercion",
+                        "dominance",
+                        "ideology",
+                        "notoriety",
+                        "organizational-gain",
+                        "personal-gain",
+                        "personal-satisfaction",
+                        "revenge",
+                        "unpredictable"
+                    ],
+                    "order": 10
+                },
+                "secondary_motivations": {
+                    "description": "Comma-separated list of secondary motivations",
+                    "data_type": "string",
+                    "order": 11
+                },
+                "personal_motivations": {
+                    "description": "Comma-separated list of personal motivations",
+                    "data_type": "string",
+                    "order": 12
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.threat_actor_types",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.threat_actor_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "create campaign",
+            "description": "Create a campaign in OpenCTI",
+            "type": "generic",
+            "identifier": "create_campaign",
+            "read_only": false,
+            "parameters": {
+                "name": {
+                    "description": "Name of the campaign",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "description": {
+                    "description": "Description of the campaign",
+                    "data_type": "string",
+                    "order": 1
+                },
+                "aliases": {
+                    "description": "Comma-separated list of aliases",
+                    "data_type": "string",
+                    "order": 2
+                },
+                "first_seen": {
+                    "description": "First seen date (ISO format)",
+                    "data_type": "string",
+                    "order": 3
+                },
+                "last_seen": {
+                    "description": "Last seen date (ISO format)",
+                    "data_type": "string",
+                    "order": 4
+                },
+                "objective": {
+                    "description": "Campaign objective",
+                    "data_type": "string",
+                    "order": 5
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.campaign_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "create vulnerability",
+            "description": "Create a vulnerability in OpenCTI",
+            "type": "generic",
+            "identifier": "create_vulnerability",
+            "read_only": false,
+            "parameters": {
+                "name": {
+                    "description": "Name/CVE ID of the vulnerability",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "description": {
+                    "description": "Description of the vulnerability",
+                    "data_type": "string",
+                    "order": 1
+                },
+                "cvss_base_score": {
+                    "description": "CVSS base score (0-10)",
+                    "data_type": "numeric",
+                    "order": 2
+                },
+                "cvss_base_severity": {
+                    "description": "CVSS base severity",
+                    "data_type": "string",
+                    "value_list": [
+                        "None",
+                        "Low",
+                        "Medium",
+                        "High",
+                        "Critical"
+                    ],
+                    "order": 3
+                },
+                "cvss_attack_vector": {
+                    "description": "CVSS attack vector",
+                    "data_type": "string",
+                    "value_list": [
+                        "Network",
+                        "Adjacent",
+                        "Local",
+                        "Physical"
+                    ],
+                    "order": 4
+                },
+                "cvss_integrity_impact": {
+                    "description": "CVSS integrity impact",
+                    "data_type": "string",
+                    "value_list": [
+                        "None",
+                        "Low",
+                        "High"
+                    ],
+                    "order": 5
+                },
+                "cvss_availability_impact": {
+                    "description": "CVSS availability impact",
+                    "data_type": "string",
+                    "value_list": [
+                        "None",
+                        "Low",
+                        "High"
+                    ],
+                    "order": 6
+                },
+                "cvss_confidentiality_impact": {
+                    "description": "CVSS confidentiality impact",
+                    "data_type": "string",
+                    "value_list": [
+                        "None",
+                        "Low",
+                        "High"
+                    ],
+                    "order": 7
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.vulnerability_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "create relationship",
+            "description": "Create a relationship between two entities in OpenCTI",
+            "type": "generic",
+            "identifier": "create_relationship",
+            "read_only": false,
+            "parameters": {
+                "from_id": {
+                    "description": "ID of the source entity",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "to_id": {
+                    "description": "ID of the target entity",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 1
+                },
+                "relationship_type": {
+                    "description": "Type of relationship",
+                    "data_type": "string",
+                    "required": true,
+                    "value_list": [
+                        "uses",
+                        "targets",
+                        "related-to",
+                        "mitigates",
+                        "impersonates",
+                        "indicates",
+                        "comes-after",
+                        "attributed-to",
+                        "variant-of",
+                        "originates-from",
+                        "delivers",
+                        "drops",
+                        "exploits",
+                        "hosts",
+                        "downloads",
+                        "communicates-with",
+                        "consists-of",
+                        "controls",
+                        "authored-by",
+                        "beacons-to",
+                        "exfiltrates-to"
+                    ],
+                    "order": 2
+                },
+                "description": {
+                    "description": "Description of the relationship",
+                    "data_type": "string",
+                    "order": 3
+                },
+                "start_time": {
+                    "description": "Start time of the relationship (ISO format)",
+                    "data_type": "string",
+                    "order": 4
+                },
+                "stop_time": {
+                    "description": "Stop time of the relationship (ISO format)",
+                    "data_type": "string",
+                    "order": 5
+                },
+                "confidence": {
+                    "description": "Confidence level (0-100)",
+                    "data_type": "numeric",
+                    "order": 6
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.from_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.to_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.relationship_type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.relationship_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "search entities",
+            "description": "Search for entities in OpenCTI",
+            "type": "investigate",
+            "identifier": "search_entities",
+            "read_only": true,
+            "parameters": {
+                "search_term": {
+                    "description": "Search term to find entities",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "entity_types": {
+                    "description": "Comma-separated list of entity types to search (e.g., Threat-Actor,Malware,Campaign)",
+                    "data_type": "string",
+                    "order": 1
+                },
+                "limit": {
+                    "description": "Maximum number of results to retrieve",
+                    "data_type": "numeric",
+                    "default": 50,
+                    "order": 2
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.search_term",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.entity_types",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.limit",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.entity_type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.description",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.total_results",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "create case incident",
+            "description": "Create a case incident in OpenCTI for incident response",
+            "type": "generic",
+            "identifier": "create_case_incident",
+            "read_only": false,
+            "parameters": {
+                "name": {
+                    "description": "Name of the case incident",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "description": {
+                    "description": "Description of the case incident",
+                    "data_type": "string",
+                    "order": 1
+                },
+                "severity": {
+                    "description": "Severity of the case",
+                    "data_type": "string",
+                    "value_list": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                    ],
+                    "order": 2
+                },
+                "priority": {
+                    "description": "Priority of the case",
+                    "data_type": "string",
+                    "value_list": [
+                        "P1",
+                        "P2",
+                        "P3",
+                        "P4"
+                    ],
+                    "order": 3
+                },
+                "response_types": {
+                    "description": "Comma-separated list of response types",
+                    "data_type": "string",
+                    "order": 4
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.case_incident_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "create case rfi",
+            "description": "Create a case RFI (Request for Information) in OpenCTI",
+            "type": "generic",
+            "identifier": "create_case_rfi",
+            "read_only": false,
+            "parameters": {
+                "name": {
+                    "description": "Name of the case RFI",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "description": {
+                    "description": "Description of the case RFI",
+                    "data_type": "string",
+                    "order": 1
+                },
+                "information_types": {
+                    "description": "Comma-separated list of information types requested",
+                    "data_type": "string",
+                    "order": 2
+                },
+                "severity": {
+                    "description": "Severity of the case",
+                    "data_type": "string",
+                    "value_list": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                    ],
+                    "order": 3
+                },
+                "priority": {
+                    "description": "Priority of the case",
+                    "data_type": "string",
+                    "value_list": [
+                        "P1",
+                        "P2",
+                        "P3",
+                        "P4"
+                    ],
+                    "order": 4
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.case_rfi_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "create case rft",
+            "description": "Create a case RFT (Request for Takedown) in OpenCTI",
+            "type": "generic",
+            "identifier": "create_case_rft",
+            "read_only": false,
+            "parameters": {
+                "name": {
+                    "description": "Name of the case RFT",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "description": {
+                    "description": "Description of the case RFT",
+                    "data_type": "string",
+                    "order": 1
+                },
+                "takedown_types": {
+                    "description": "Comma-separated list of takedown types",
+                    "data_type": "string",
+                    "order": 2
+                },
+                "severity": {
+                    "description": "Severity of the case",
+                    "data_type": "string",
+                    "value_list": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                    ],
+                    "order": 3
+                },
+                "priority": {
+                    "description": "Priority of the case",
+                    "data_type": "string",
+                    "value_list": [
+                        "P1",
+                        "P2",
+                        "P3",
+                        "P4"
+                    ],
+                    "order": 4
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.case_rft_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "create incident",
+            "description": "Create an incident in OpenCTI",
+            "type": "generic",
+            "identifier": "create_incident",
+            "read_only": false,
+            "parameters": {
+                "name": {
+                    "description": "Name of the incident",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "description": {
+                    "description": "Description of the incident",
+                    "data_type": "string",
+                    "order": 1
+                },
+                "first_seen": {
+                    "description": "First seen date (ISO format)",
+                    "data_type": "string",
+                    "order": 2
+                },
+                "last_seen": {
+                    "description": "Last seen date (ISO format)",
+                    "data_type": "string",
+                    "order": 3
+                },
+                "objective": {
+                    "description": "Incident objective",
+                    "data_type": "string",
+                    "order": 4
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.incident_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "search observables",
+            "description": "Search for STIX cyber observables in OpenCTI",
+            "type": "investigate",
+            "identifier": "search_observables",
+            "read_only": true,
+            "parameters": {
+                "search_term": {
+                    "description": "Search term to find observables",
+                    "data_type": "string",
+                    "order": 0
+                },
+                "observable_types": {
+                    "description": "Comma-separated list of observable types (e.g., IPv4-Addr,Domain-Name,URL)",
+                    "data_type": "string",
+                    "order": 1
+                },
+                "value": {
+                    "description": "Exact value to search for",
+                    "data_type": "string",
+                    "contains": [
+                        "ip",
+                        "domain",
+                        "url",
+                        "hash",
+                        "email"
+                    ],
+                    "order": 2
+                },
+                "limit": {
+                    "description": "Maximum number of results to retrieve",
+                    "data_type": "numeric",
+                    "default": 50,
+                    "order": 3
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.search_term",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.observable_types",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.value",
+                    "data_type": "string",
+                    "contains": [
+                        "ip",
+                        "domain",
+                        "url",
+                        "hash",
+                        "email"
+                    ]
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.observable_value",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.entity_type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.total_observables",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "create observable",
+            "description": "Create a STIX cyber observable in OpenCTI",
+            "type": "generic",
+            "identifier": "create_observable",
+            "read_only": false,
+            "parameters": {
+                "observable_type": {
+                    "description": "Type of the observable",
+                    "data_type": "string",
+                    "required": true,
+                    "value_list": [
+                        "Artifact",
+                        "Autonomous-System",
+                        "Bank-Account",
+                        "Cryptocurrency-Wallet",
+                        "Cryptographic-Key",
+                        "Directory",
+                        "Domain-Name",
+                        "Email-Addr",
+                        "Email-Message",
+                        "Hostname",
+                        "IPv4-Addr",
+                        "IPv6-Addr",
+                        "Mac-Addr",
+                        "Media-Content",
+                        "Mutex",
+                        "Network-Traffic",
+                        "Payment-Card",
+                        "Person",
+                        "Phone-Number",
+                        "Process",
+                        "Software",
+                        "StixFile",
+                        "Text",
+                        "Tracking-Number",
+                        "URL",
+                        "User-Account",
+                        "User-Agent",
+                        "Windows-Registry-Key",
+                        "X509-Certificate"
+                    ],
+                    "order": 0
+                },
+                "observable_value": {
+                    "description": "Value of the observable",
+                    "data_type": "string",
+                    "required": true,
+                    "contains": [
+                        "ip",
+                        "domain",
+                        "url",
+                        "hash",
+                        "email"
+                    ],
+                    "order": 1
+                },
+                "description": {
+                    "description": "Description of the observable",
+                    "data_type": "string",
+                    "order": 2
+                },
+                "score": {
+                    "description": "Threat score (0-100)",
+                    "data_type": "numeric",
+                    "order": 3
+                },
+                "labels": {
+                    "description": "Comma-separated list of labels",
+                    "data_type": "string",
+                    "order": 4
+                },
+                "marking_definitions": {
+                    "description": "Comma-separated list of marking definitions (e.g., TLP:GREEN,TLP:AMBER)",
+                    "data_type": "string",
+                    "order": 5
+                },
+                "create_indicator": {
+                    "description": "Create an indicator from this observable",
+                    "data_type": "boolean",
+                    "default": false,
+                    "order": 6
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.observable_type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.observable_value",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.observable_value",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.observable_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "create report",
+            "description": "Create a report in OpenCTI",
+            "type": "generic",
+            "identifier": "create_report",
+            "read_only": false,
+            "parameters": {
+                "name": {
+                    "description": "Name of the report",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "published": {
+                    "description": "Publication date (ISO format)",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 1
+                },
+                "description": {
+                    "description": "Description of the report",
+                    "data_type": "string",
+                    "order": 2
+                },
+                "report_types": {
+                    "description": "Comma-separated list of report types",
+                    "data_type": "string",
+                    "order": 3
+                },
+                "confidence": {
+                    "description": "Confidence level (0-100)",
+                    "data_type": "numeric",
+                    "order": 4
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.published",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.report_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "create grouping",
+            "description": "Create a grouping in OpenCTI",
+            "type": "generic",
+            "identifier": "create_grouping",
+            "read_only": false,
+            "parameters": {
+                "name": {
+                    "description": "Name of the grouping",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "context": {
+                    "description": "Context of the grouping",
+                    "data_type": "string",
+                    "required": true,
+                    "value_list": [
+                        "suspicious-activity",
+                        "malware-analysis",
+                        "unspecified"
+                    ],
+                    "order": 1
+                },
+                "description": {
+                    "description": "Description of the grouping",
+                    "data_type": "string",
+                    "order": 2
+                },
+                "confidence": {
+                    "description": "Confidence level (0-100)",
+                    "data_type": "numeric",
+                    "order": 3
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.context",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.name",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.grouping_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "add object to report",
+            "description": "Add an object to a report in OpenCTI",
+            "type": "generic",
+            "identifier": "add_object_to_report",
+            "read_only": false,
+            "parameters": {
+                "report_id": {
+                    "description": "ID of the report",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "object_id": {
+                    "description": "ID of the object to add",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 1
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.report_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.object_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.object_added",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "add object to grouping",
+            "description": "Add an object to a grouping in OpenCTI",
+            "type": "generic",
+            "identifier": "add_object_to_grouping",
+            "read_only": false,
+            "parameters": {
+                "grouping_id": {
+                    "description": "ID of the grouping",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "object_id": {
+                    "description": "ID of the object to add",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 1
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.grouping_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.object_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.object_added",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "convert to stix pattern", 
+            "description": "Convert Splunk SOAR artifact types to STIX pattern format for use with indicators",
+            "type": "generic",
+            "identifier": "convert_to_stix_pattern",
+            "read_only": true,
+            "parameters": {
+                "artifact_type": {
+                    "description": "Type of artifact (e.g., 'ip', 'domain', 'hash', 'url', 'email', 'file name', etc.)",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "artifact_value": {
+                    "description": "Value of the artifact to convert",
+                    "data_type": "string", 
+                    "required": true,
+                    "order": 1
+                },
+                "additional_properties": {
+                    "description": "Additional properties for complex patterns (format: 'property1=value1,property2=value2')",
+                    "data_type": "string",
+                    "required": false,
+                    "order": 2
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.artifact_type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.artifact_value",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.additional_properties",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.original_type",
+                    "data_type": "string",
+                    "column_name": "Original Type",
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.original_value",
+                    "data_type": "string",
+                    "column_name": "Original Value",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.stix_pattern",
+                    "data_type": "string",
+                    "column_name": "STIX Pattern",
+                    "column_order": 2,
+                    "contains": ["stix pattern"]
+                },
+                {
+                    "data_path": "action_result.data.*.pattern_type",
+                    "data_type": "string",
+                    "column_name": "Pattern Type",
+                    "column_order": 3
+                },
+                {
+                    "data_path": "action_result.data.*.detected_observable_type",
+                    "data_type": "string",
+                    "column_name": "Observable Type",
+                    "column_order": 4
+                },
+                {
+                    "data_path": "action_result.summary.conversion_successful",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.summary.stix_pattern",
+                    "data_type": "string",
+                    "contains": ["stix pattern"]
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "create label",
+            "description": "Create a label in OpenCTI",
+            "type": "generic",
+            "identifier": "create_label",
+            "read_only": false,
+            "parameters": {
+                "value": {
+                    "description": "Label value/name",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "color": {
+                    "description": "Label color (hex format, e.g., #FF0000). If not provided, a predictive color will be generated based on the label value",
+                    "data_type": "string",
+                    "required": false,
+                    "order": 1
+                },
+                "stix_id": {
+                    "description": "Custom STIX ID for the label",
+                    "data_type": "string",
+                    "required": false,
+                    "order": 2
+                },
+                "x_opencti_stix_ids": {
+                    "description": "Additional STIX IDs (comma-separated)",
+                    "data_type": "string",
+                    "required": false,
+                    "order": 3
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.value",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.color",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.stix_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.x_opencti_stix_ids",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.id",
+                    "data_type": "string",
+                    "column_name": "Label ID",
+                    "column_order": 0
+                },
+                {
+                    "data_path": "action_result.data.*.value",
+                    "data_type": "string",
+                    "column_name": "Label Value",
+                    "column_order": 1
+                },
+                {
+                    "data_path": "action_result.data.*.color",
+                    "data_type": "string",
+                    "column_name": "Label Color",
+                    "column_order": 2
+                },
+                {
+                    "data_path": "action_result.summary.label_created",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.summary.label_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.label_value",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.label_color",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        }
+    ],
+    "pip_dependencies": {
+        "pypi": [
+            {
+                "module": "pycti"
+            },
+            {
+                "module": "requests"
+            }
+        ]
+    },
+    "pip39_dependencies": {
+        "pypi": [
+            {
+                "module": "pycti"
+            },
+            {
+                "module": "requests"
+            }
+        ]
+    },
+    "pip310_dependencies": {
+        "pypi": [
+            {
+                "module": "pycti"
+            },
+            {
+                "module": "requests"
+            }
+        ]
+    },
+    "pip311_dependencies": {
+        "pypi": [
+            {
+                "module": "pycti"
+            },
+            {
+                "module": "requests"
+            }
+        ]
+    },
+    "pip312_dependencies": {
+        "pypi": [
+            {
+                "module": "pycti"
+            },
+            {
+                "module": "requests"
+            }
+        ]
+    }
+}

@@ -1,0 +1,196 @@
+{% extends 'widgets/widget_template.html' %}
+{% load custom_template %}
+{% block custom_title_prop %}
+  {% if title_logo %}
+    style="background-size: auto 60%; background-position: 50%; background-repeat: no-repeat; background-image: url('/app_resource/{{ title_logo }}');"
+  {% endif %}
+{% endblock %}
+{% block title1 %}{{ title1 }}{% endblock %}
+{% block title2 %}{{ title2 }}{% endblock %}
+{% block custom_tools %}{% endblock %}
+{% block widget_content %}
+  <!-- Main Start Block -->
+  <!-- File: opencti_display_default.html
+  Copyright (c) 2025 Filigran
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software distributed under
+  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  either express or implied. See the License for the specific language governing permissions
+  and limitations under the License.
+-->
+  <style>
+    .opencti-app a:hover {
+        text-decoration:underline;
+    }
+
+    .opencti-app .wf-table-vertical {
+        width: initial;
+        font-size: 12px;
+    }
+
+    .opencti-app .wf-table-vertical td {
+        padding: 5px;
+        border: 1px solid;
+    }
+
+    .opencti-app .wf-table-vertical tr td:first-child {
+        font-weight: bold;
+        background-color: #f5f5f5;
+        text-transform: uppercase;
+        font-size: 11px;
+    }
+
+    .opencti-app .wf-h3-style {
+        font-size : 20px
+    }
+
+    .opencti-app .wf-h4-style {
+        font-size : 16px
+    }
+
+    .opencti-app .wf-h5-style {
+        font-size : 14px
+    }
+
+    .opencti-app .json-key {
+        color: #881391;
+        font-weight: bold;
+    }
+
+    .opencti-app .json-value {
+        color: #1a1aa6;
+    }
+
+    .opencti-app .json-string {
+        color: #c41a16;
+    }
+
+    .opencti-app pre {
+        background-color: #f8f8f8;
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        overflow-x: auto;
+    }
+
+  </style>
+  <div class="opencti-app"
+       style="overflow: auto;
+              width: 100%;
+              height: 100%;
+              padding-left:10px;
+              padding-right:10px">
+    <!-- Main Div -->
+    {% for result in results %}
+      <!-- loop for each result -->
+      <br>
+      <!------------------- For each Result ---------------------->
+      {% if not result.data %}
+        <h4 class="wf-h4-style">No data found</h4>
+      {% else %}
+        <h3 class="wf-h3-style">OpenCTI Results</h3>
+        {% for curr_data in result.data %}
+          <table class="wf-table-vertical">
+            <tr>
+              <td colspan="2" style="text-align: center; background-color: #2196f3; color: white; font-weight: bold;">
+                RESULT {{ forloop.counter }}
+              </td>
+            </tr>
+            {% if curr_data.id %}
+              <tr>
+                <td>ID</td>
+                <td>
+                  <a href="javascript:;"
+                     onclick="context_menu(this, [{'contains': ['opencti id'], 'value': '{{ curr_data.id }}' }], 0, {{ container.id }}, null, false);">
+                    {{ curr_data.id }}
+                    &nbsp;<span class="fa fa-caret-down" style="font-size: smaller;"></span>
+                  </a>
+                </td>
+              </tr>
+            {% endif %}
+            {% if curr_data.name %}
+              <tr>
+                <td>Name</td>
+                <td>{{ curr_data.name }}</td>
+              </tr>
+            {% endif %}
+            {% if curr_data.description %}
+              <tr>
+                <td>Description</td>
+                <td>{{ curr_data.description }}</td>
+              </tr>
+            {% endif %}
+            {% if curr_data.entity_type %}
+              <tr>
+                <td>Type</td>
+                <td>{{ curr_data.entity_type }}</td>
+              </tr>
+            {% endif %}
+            {% if curr_data.created %}
+              <tr>
+                <td>Created</td>
+                <td>{{ curr_data.created }}</td>
+              </tr>
+            {% endif %}
+            {% if curr_data.modified %}
+              <tr>
+                <td>Modified</td>
+                <td>{{ curr_data.modified }}</td>
+              </tr>
+            {% endif %}
+            {% if curr_data.confidence %}
+              <tr>
+                <td>Confidence</td>
+                <td>{{ curr_data.confidence }}%</td>
+              </tr>
+            {% endif %}
+            {% if curr_data.labels %}
+              <tr>
+                <td>Labels</td>
+                <td>
+                  {% for label in curr_data.labels %}
+                    <span style="background-color: #e0e0e0; padding: 2px 6px; border-radius: 3px; margin: 2px;">{{ label }}</span>
+                  {% endfor %}
+                </td>
+              </tr>
+            {% endif %}
+            {% if curr_data.objectLabel %}
+              <tr>
+                <td>Labels</td>
+                <td>
+                  {% for label in curr_data.objectLabel %}
+                    <span style="background-color: #e0e0e0; padding: 2px 6px; border-radius: 3px; margin: 2px;">{{ label.value }}</span>
+                  {% endfor %}
+                </td>
+              </tr>
+            {% endif %}
+            <!-- Display any additional fields -->
+            {% for key, value in curr_data.items %}
+              {% if key not in "id,name,description,entity_type,created,modified,confidence,labels,objectLabel" %}
+                <tr>
+                  <td>{{ key|title|replace:"_"," " }}</td>
+                  <td>
+                    {% if value|length > 100 %}
+                      <pre>{{ value|truncatechars:500 }}</pre>
+                    {% else %}
+                      {{ value }}
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endif %}
+            {% endfor %}
+          </table>
+          <br>
+        {% endfor %}
+      {% endif %}
+    {% endfor %}
+    <!-- loop for each result end -->
+  </div>
+  <!-- Main Div -->
+{% endblock %}
+<!-- Main Start Block -->

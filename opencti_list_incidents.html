@@ -1,0 +1,279 @@
+{% extends 'widgets/widget_template.html' %}
+{% load custom_template %}
+{% block custom_title_prop %}
+  {% if title_logo %}
+    style="background-size: auto 60%; background-position: 50%; background-repeat: no-repeat; background-image: url('/app_resource/{{ title_logo }}');"
+  {% endif %}
+{% endblock %}
+{% block title1 %}{{ title1 }}{% endblock %}
+{% block title2 %}{{ title2 }}{% endblock %}
+{% block custom_tools %}{% endblock %}
+{% block widget_content %}
+  <!-- Main Start Block -->
+  <!-- File: opencti_list_incidents.html
+  Copyright (c) 2025 Filigran
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software distributed under
+  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  either express or implied. See the License for the specific language governing permissions
+  and limitations under the License.
+-->
+  <style>
+    .opencti-app a:hover {
+        text-decoration:underline;
+    }
+
+    .opencti-app .wf-table-horizontal {
+        border: 1px solid;
+        font-size: 12px;
+    }
+
+    .opencti-app .wf-table-horizontal th {
+        text-align: center;
+        border: 1px solid;
+        text-transform: uppercase;
+        font-weight: normal;
+        padding: 5px;
+    }
+
+    .opencti-app .wf-table-horizontal td {
+        border: 1px solid;
+        padding: 5px;
+        padding-left: 4px;
+    }
+
+    .opencti-app .wf-h3-style {
+        font-size : 20px
+    }
+
+    .opencti-app .wf-h4-style {
+        font-size : 16px
+    }
+
+    .opencti-no-wrap {
+        white-space:nowrap;
+    }
+
+    .opencti-incident-type {
+        background-color: #e91e63;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+
+    .opencti-severity {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-weight: bold;
+    }
+
+    .opencti-severity-critical {
+        background-color: #b71c1c;
+        color: white;
+    }
+
+    .opencti-severity-high {
+        background-color: #d32f2f;
+        color: white;
+    }
+
+    .opencti-severity-medium {
+        background-color: #ff9800;
+        color: white;
+    }
+
+    .opencti-severity-low {
+        background-color: #4caf50;
+        color: white;
+    }
+
+    .opencti-confidence {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+    }
+
+    .opencti-confidence-high {
+        background-color: #1976d2;
+        color: white;
+    }
+
+    .opencti-confidence-medium {
+        background-color: #42a5f5;
+        color: white;
+    }
+
+    .opencti-confidence-low {
+        background-color: #90caf9;
+        color: #333;
+    }
+
+    .opencti-target {
+        background-color: #ff5722;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 11px;
+        margin: 2px;
+        display: inline-block;
+    }
+
+    .opencti-attacker {
+        background-color: #9c27b0;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 11px;
+        margin: 2px;
+        display: inline-block;
+    }
+
+  </style>
+  <div class="opencti-app"
+       style="overflow: auto;
+              width: 100%;
+              height: 100%;
+              padding-left:10px;
+              padding-right:10px">
+    <!-- Main Div -->
+    {% for result in results %}
+      <!-- loop for each result -->
+      <br>
+      <!------------------- For each Result ---------------------->
+      {% if not result.data %}
+        <h4 class="wf-h4-style">No incidents found</h4>
+      {% else %}
+        <h3 class="wf-h3-style">OpenCTI Incidents</h3>
+        <div class="metadata_div">
+          <!--Default View-->
+          <div class="panel-group" id="incident-information">
+            <div class="panel">
+              <div id="default-view-table" class="panel-collapse collapse in">
+                <table class="wf-table-horizontal datatable">
+                  <thead>
+                    <tr>
+                      <th>NAME</th>
+                      <th>SEVERITY</th>
+                      <th>CONFIDENCE</th>
+                      <th>FIRST SEEN</th>
+                      <th>LAST SEEN</th>
+                      <th>TARGETS</th>
+                      <th>LABELS</th>
+                      <th>CREATED</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for incident in result.data %}
+                      <tr>
+                        <td>
+                          <a href="javascript:;"
+                             onclick="context_menu(this, [{'contains': ['opencti incident id'], 'value': '{{ incident.id }}' }], 0, {{ container.id }}, null, false);">
+                            <strong>{{ incident.name|default:"Unnamed Incident" }}</strong>
+                            &nbsp;<span class="fa fa-caret-down" style="font-size: smaller;"></span>
+                          </a>
+                          {% if incident.description %}
+                            <br><small style="color: #666;">{{ incident.description|truncatechars:100 }}</small>
+                          {% endif %}
+                          <br>
+                          <span class="opencti-incident-type">INCIDENT</span>
+                          {% if incident.incident_type %}
+                            <small style="margin-left: 5px; color: #888;">Type: {{ incident.incident_type }}</small>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if incident.severity == "critical" %}
+                            <span class="opencti-severity opencti-severity-critical">CRITICAL</span>
+                          {% elif incident.severity == "high" %}
+                            <span class="opencti-severity opencti-severity-high">HIGH</span>
+                          {% elif incident.severity == "medium" %}
+                            <span class="opencti-severity opencti-severity-medium">MEDIUM</span>
+                          {% elif incident.severity == "low" %}
+                            <span class="opencti-severity opencti-severity-low">LOW</span>
+                          {% else %}
+                            <span style="color: #999;">{{ incident.severity|default:"Unknown" }}</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if incident.confidence %}
+                            {% if incident.confidence >= 75 %}
+                              <span class="opencti-confidence opencti-confidence-high">{{ incident.confidence }}%</span>
+                            {% elif incident.confidence >= 50 %}
+                              <span class="opencti-confidence opencti-confidence-medium">{{ incident.confidence }}%</span>
+                            {% else %}
+                              <span class="opencti-confidence opencti-confidence-low">{{ incident.confidence }}%</span>
+                            {% endif %}
+                          {% else %}
+                            <span style="color: #999;">N/A</span>
+                          {% endif %}
+                        </td>
+                        <td>{{ incident.first_seen|default:"-" }}</td>
+                        <td>{{ incident.last_seen|default:"-" }}</td>
+                        <td>
+                          {% if incident.objectsOfIncident %}
+                            {% for target in incident.objectsOfIncident %}
+                              {% if target.relationship_type == "targets" %}
+                                <span class="opencti-target">{{ target.to.name }}</span>
+                              {% endif %}
+                            {% endfor %}
+                          {% else %}
+                            <span style="color: #999;">Unknown</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if incident.objectLabel %}
+                            {% for label in incident.objectLabel %}
+                              <span style="background-color: #e0e0e0; padding: 2px 6px; border-radius: 3px; margin: 2px; display: inline-block;">{{ label.value }}</span>
+                            {% endfor %}
+                          {% else %}
+                            <span style="color: #999;">None</span>
+                          {% endif %}
+                        </td>
+                        <td>{{ incident.created|default:"-" }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <br>
+      {% endif %}
+    {% endfor %}
+    <!-- loop for each result end -->
+  </div>
+  <!-- Main Div -->
+  <script>
+    $.extend(true, $.fn.dataTable.defaults, {
+        "searching": true,
+        "bLengthChange": false,
+        "ordering": true,
+        "language": {
+            "paginate": {
+                "previous": "<i class='fa fa-angle-left fa-lg'></i>",
+                "next": "<i class='fa fa-angle-right fa-lg'></i>"
+            }
+        },
+        "dom": '<"top">rt<"bottom"p><"clear">',
+        drawCallback: function(settings) {
+            var pagination = $(this).closest('.dataTables_wrapper').find('.dataTables_paginate');
+            pagination.toggle(this.api().page.info().pages > 1);
+        }
+    });
+    $.fn.DataTable.ext.pager.numbers_length = 5;
+    $('.datatable').DataTable({
+        order: [[7, "desc"]]  // Sort by Created date by default
+    });
+  </script>
+{% endblock %}
+<!-- Main Start Block -->

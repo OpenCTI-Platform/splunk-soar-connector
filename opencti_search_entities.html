@@ -1,0 +1,256 @@
+{% extends 'widgets/widget_template.html' %}
+{% load custom_template %}
+{% block custom_title_prop %}
+  {% if title_logo %}
+    style="background-size: auto 60%; background-position: 50%; background-repeat: no-repeat; background-image: url('/app_resource/{{ title_logo }}');"
+  {% endif %}
+{% endblock %}
+{% block title1 %}{{ title1 }}{% endblock %}
+{% block title2 %}{{ title2 }}{% endblock %}
+{% block custom_tools %}{% endblock %}
+{% block widget_content %}
+  <!-- Main Start Block -->
+  <!-- File: opencti_search_entities.html
+  Copyright (c) 2025 Filigran
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software distributed under
+  the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+  either express or implied. See the License for the specific language governing permissions
+  and limitations under the License.
+-->
+  <style>
+    .opencti-app a:hover {
+        text-decoration:underline;
+    }
+
+    .opencti-app .wf-table-horizontal {
+        border: 1px solid;
+        font-size: 12px;
+    }
+
+    .opencti-app .wf-table-horizontal th {
+        text-align: center;
+        border: 1px solid;
+        text-transform: uppercase;
+        font-weight: normal;
+        padding: 5px;
+    }
+
+    .opencti-app .wf-table-horizontal td {
+        border: 1px solid;
+        padding: 5px;
+        padding-left: 4px;
+    }
+
+    .opencti-app .wf-h3-style {
+        font-size : 20px
+    }
+
+    .opencti-app .wf-h4-style {
+        font-size : 16px
+    }
+
+    .opencti-no-wrap {
+        white-space:nowrap;
+    }
+
+    .opencti-entity-type {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: bold;
+        color: white;
+    }
+
+    /* Entity type colors */
+    .opencti-type-indicator { background-color: #ff5722; }
+    .opencti-type-malware { background-color: #f44336; }
+    .opencti-type-threat-actor { background-color: #9c27b0; }
+    .opencti-type-intrusion-set { background-color: #673ab7; }
+    .opencti-type-campaign { background-color: #3f51b5; }
+    .opencti-type-incident { background-color: #e91e63; }
+    .opencti-type-attack-pattern { background-color: #2196f3; }
+    .opencti-type-tool { background-color: #00bcd4; }
+    .opencti-type-vulnerability { background-color: #009688; }
+    .opencti-type-identity { background-color: #4caf50; }
+    .opencti-type-location { background-color: #8bc34a; }
+    .opencti-type-infrastructure { background-color: #cddc39; }
+    .opencti-type-default { background-color: #607d8b; }
+
+    .opencti-confidence-bar {
+        display: inline-block;
+        width: 60px;
+        height: 8px;
+        background-color: #e0e0e0;
+        border-radius: 4px;
+        position: relative;
+        margin-right: 5px;
+    }
+
+    .opencti-confidence-fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        border-radius: 4px;
+        background-color: #2196f3;
+    }
+
+  </style>
+  <div class="opencti-app"
+       style="overflow: auto;
+              width: 100%;
+              height: 100%;
+              padding-left:10px;
+              padding-right:10px">
+    <!-- Main Div -->
+    {% for result in results %}
+      <!-- loop for each result -->
+      <br>
+      <!------------------- For each Result ---------------------->
+      {% if not result.data %}
+        <h4 class="wf-h4-style">No entities found</h4>
+      {% else %}
+        <h3 class="wf-h3-style">OpenCTI Search Results</h3>
+        <div class="metadata_div">
+          <!--Default View-->
+          <div class="panel-group" id="entity-information">
+            <div class="panel">
+              <div id="default-view-table" class="panel-collapse collapse in">
+                <table class="wf-table-horizontal datatable">
+                  <thead>
+                    <tr>
+                      <th>NAME</th>
+                      <th>TYPE</th>
+                      <th>CONFIDENCE</th>
+                      <th>LABELS</th>
+                      <th>CREATED BY</th>
+                      <th>CREATED</th>
+                      <th>UPDATED</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for entity in result.data %}
+                      <tr>
+                        <td>
+                          <a href="javascript:;"
+                             onclick="context_menu(this, [{'contains': ['opencti entity id'], 'value': '{{ entity.id }}' }], 0, {{ container.id }}, null, false);">
+                            <strong>{{ entity.name|default:entity.value|default:"Unnamed Entity" }}</strong>
+                            &nbsp;<span class="fa fa-caret-down" style="font-size: smaller;"></span>
+                          </a>
+                          {% if entity.description %}
+                            <br><small style="color: #666;">{{ entity.description|truncatechars:150 }}</small>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if entity.entity_type %}
+                            {% if entity.entity_type == "indicator" %}
+                              <span class="opencti-entity-type opencti-type-indicator">{{ entity.entity_type|upper }}</span>
+                            {% elif entity.entity_type == "malware" %}
+                              <span class="opencti-entity-type opencti-type-malware">{{ entity.entity_type|upper }}</span>
+                            {% elif entity.entity_type == "threat-actor" %}
+                              <span class="opencti-entity-type opencti-type-threat-actor">{{ entity.entity_type|upper }}</span>
+                            {% elif entity.entity_type == "intrusion-set" %}
+                              <span class="opencti-entity-type opencti-type-intrusion-set">{{ entity.entity_type|upper }}</span>
+                            {% elif entity.entity_type == "campaign" %}
+                              <span class="opencti-entity-type opencti-type-campaign">{{ entity.entity_type|upper }}</span>
+                            {% elif entity.entity_type == "incident" %}
+                              <span class="opencti-entity-type opencti-type-incident">{{ entity.entity_type|upper }}</span>
+                            {% elif entity.entity_type == "attack-pattern" %}
+                              <span class="opencti-entity-type opencti-type-attack-pattern">{{ entity.entity_type|upper }}</span>
+                            {% elif entity.entity_type == "tool" %}
+                              <span class="opencti-entity-type opencti-type-tool">{{ entity.entity_type|upper }}</span>
+                            {% elif entity.entity_type == "vulnerability" %}
+                              <span class="opencti-entity-type opencti-type-vulnerability">{{ entity.entity_type|upper }}</span>
+                            {% elif entity.entity_type == "identity" %}
+                              <span class="opencti-entity-type opencti-type-identity">{{ entity.entity_type|upper }}</span>
+                            {% elif entity.entity_type == "location" %}
+                              <span class="opencti-entity-type opencti-type-location">{{ entity.entity_type|upper }}</span>
+                            {% elif entity.entity_type == "infrastructure" %}
+                              <span class="opencti-entity-type opencti-type-infrastructure">{{ entity.entity_type|upper }}</span>
+                            {% else %}
+                              <span class="opencti-entity-type opencti-type-default">{{ entity.entity_type|upper }}</span>
+                            {% endif %}
+                          {% else %}
+                            <span style="color: #999;">Unknown</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if entity.confidence %}
+                            <div style="display: flex; align-items: center;">
+                              <div class="opencti-confidence-bar">
+                                <div class="opencti-confidence-fill" style="width: {{ entity.confidence }}%;"></div>
+                              </div>
+                              <small>{{ entity.confidence }}%</small>
+                            </div>
+                          {% else %}
+                            <span style="color: #999;">N/A</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if entity.objectLabel %}
+                            {% for label in entity.objectLabel %}
+                              <span style="background-color: #e0e0e0; padding: 2px 6px; border-radius: 3px; margin: 2px; display: inline-block;">{{ label.value }}</span>
+                            {% endfor %}
+                          {% elif entity.labels %}
+                            {% for label in entity.labels %}
+                              <span style="background-color: #e0e0e0; padding: 2px 6px; border-radius: 3px; margin: 2px; display: inline-block;">{{ label }}</span>
+                            {% endfor %}
+                          {% else %}
+                            <span style="color: #999;">None</span>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if entity.createdBy %}
+                            {{ entity.createdBy.name|default:entity.createdBy }}
+                          {% else %}
+                            <span style="color: #999;">System</span>
+                          {% endif %}
+                        </td>
+                        <td>{{ entity.created|default:"-" }}</td>
+                        <td>{{ entity.modified|default:entity.updated|default:"-" }}</td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <br>
+      {% endif %}
+    {% endfor %}
+    <!-- loop for each result end -->
+  </div>
+  <!-- Main Div -->
+  <script>
+    $.extend(true, $.fn.dataTable.defaults, {
+        "searching": true,
+        "bLengthChange": false,
+        "ordering": true,
+        "language": {
+            "paginate": {
+                "previous": "<i class='fa fa-angle-left fa-lg'></i>",
+                "next": "<i class='fa fa-angle-right fa-lg'></i>"
+            }
+        },
+        "dom": '<"top">rt<"bottom"p><"clear">',
+        drawCallback: function(settings) {
+            var pagination = $(this).closest('.dataTables_wrapper').find('.dataTables_paginate');
+            pagination.toggle(this.api().page.info().pages > 1);
+        }
+    });
+    $.fn.DataTable.ext.pager.numbers_length = 5;
+    $('.datatable').DataTable({
+        order: [[5, "desc"]]  // Sort by Created date by default
+    });
+  </script>
+{% endblock %}
+<!-- Main Start Block -->
