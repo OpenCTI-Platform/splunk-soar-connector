@@ -13,8 +13,8 @@
     "license": "Apache 2.0",
     "main_module": "opencti_connector.py",
     "view_module": "opencti_view.py",
-    "app_version": "1.0.0",
-    "utctime_updated": "2025-01-07T12:00:00.000000Z",
+    "app_version": "1.1.0",
+    "utctime_updated": "2025-01-10T12:00:00.000000Z",
     "product_vendor": "Filigran",
     "product_name": "OpenCTI",
     "product_version_regex": ".*",
@@ -1823,6 +1823,481 @@
                 {
                     "data_path": "action_result.summary.label_color",
                     "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "bulk create entities",
+            "description": "Bulk create multiple entities of the same type in OpenCTI",
+            "type": "generic",
+            "identifier": "bulk_create_entities",
+            "read_only": false,
+            "parameters": {
+                "entity_type": {
+                    "description": "Type of entities to create (e.g., indicator, observable, malware, threat-actor, campaign, etc.)",
+                    "data_type": "string",
+                    "required": true,
+                    "value_list": [
+                        "indicator",
+                        "observable",
+                        "malware",
+                        "threat-actor",
+                        "intrusion-set",
+                        "campaign",
+                        "vulnerability",
+                        "incident",
+                        "report",
+                        "grouping",
+                        "case-incident",
+                        "case-rfi",
+                        "case-rft"
+                    ],
+                    "order": 0
+                },
+                "entities_json": {
+                    "description": "JSON array of entity objects to create. Each object should contain the required fields for the entity type",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 1
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.entity_type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.created_entities",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.failed_entities",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.total_entities",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.summary.created_count",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.summary.failed_count",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.summary.entity_type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "bulk add to container",
+            "description": "Bulk add multiple objects to a container (report, grouping, or case)",
+            "type": "generic",
+            "identifier": "bulk_add_to_container",
+            "read_only": false,
+            "parameters": {
+                "container_type": {
+                    "description": "Type of container to add objects to",
+                    "data_type": "string",
+                    "required": true,
+                    "value_list": [
+                        "report",
+                        "grouping",
+                        "case-incident",
+                        "case-rfi",
+                        "case-rft"
+                    ],
+                    "order": 0
+                },
+                "container_id": {
+                    "description": "ID of the container",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 1
+                },
+                "object_ids": {
+                    "description": "Comma-separated list or JSON array of object IDs to add",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 2
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.container_type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.container_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.added_objects",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.failed_objects",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.total_objects",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.summary.added_count",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.summary.failed_count",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "add object to case incident",
+            "description": "Add an object to a case incident",
+            "type": "generic",
+            "identifier": "add_object_to_case_incident",
+            "read_only": false,
+            "parameters": {
+                "case_id": {
+                    "description": "ID of the case incident",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "object_id": {
+                    "description": "ID of the object to add",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 1
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.case_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.object_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.added",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.summary.object_added",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "add object to case rfi",
+            "description": "Add an object to a case RFI (Request for Information)",
+            "type": "generic",
+            "identifier": "add_object_to_case_rfi",
+            "read_only": false,
+            "parameters": {
+                "case_id": {
+                    "description": "ID of the case RFI",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "object_id": {
+                    "description": "ID of the object to add",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 1
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.case_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.object_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.added",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.summary.object_added",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "add object to case rft",
+            "description": "Add an object to a case RFT (Request for Takedown)",
+            "type": "generic",
+            "identifier": "add_object_to_case_rft",
+            "read_only": false,
+            "parameters": {
+                "case_id": {
+                    "description": "ID of the case RFT",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "object_id": {
+                    "description": "ID of the object to add",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 1
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.case_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.parameter.object_id",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.added",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.summary.object_added",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "enrich artifact",
+            "description": "Enrich a Splunk artifact by searching for an observable in OpenCTI and retrieving associated objects",
+            "type": "investigate",
+            "identifier": "enrich_artifact",
+            "read_only": true,
+            "parameters": {
+                "artifact_value": {
+                    "description": "Value of the artifact to enrich (IP, domain, hash, etc.)",
+                    "data_type": "string",
+                    "required": true,
+                    "contains": [
+                        "ip",
+                        "domain",
+                        "url",
+                        "hash",
+                        "email"
+                    ],
+                    "order": 0
+                },
+                "artifact_type": {
+                    "description": "Type of the artifact",
+                    "data_type": "string",
+                    "order": 1
+                },
+                "include_relationships": {
+                    "description": "Include related entities and relationships",
+                    "data_type": "boolean",
+                    "default": true,
+                    "order": 2
+                },
+                "include_indicators": {
+                    "description": "Include associated indicators",
+                    "data_type": "boolean",
+                    "default": true,
+                    "order": 3
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.parameter.artifact_value",
+                    "data_type": "string",
+                    "contains": [
+                        "ip",
+                        "domain",
+                        "url",
+                        "hash",
+                        "email"
+                    ]
+                },
+                {
+                    "data_path": "action_result.parameter.artifact_type",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.observables",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.indicators",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.relationships",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.threat_actors",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.malware",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.campaigns",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.intrusion_sets",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.enrichment_found",
+                    "data_type": "boolean"
+                },
+                {
+                    "data_path": "action_result.summary.observable_count",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.summary.indicator_count",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.summary.relationship_count",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.summary.threat_actor_count",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.summary.malware_count",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.status",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.message",
+                    "data_type": "string"
+                }
+            ],
+            "versions": "EQ(*)"
+        },
+        {
+            "action": "bulk enrich artifacts",
+            "description": "Bulk enrich multiple Splunk artifacts by searching for observables in OpenCTI",
+            "type": "investigate",
+            "identifier": "bulk_enrich_artifacts",
+            "read_only": true,
+            "parameters": {
+                "artifacts_json": {
+                    "description": "JSON array of artifact objects with 'value' and optional 'type' fields",
+                    "data_type": "string",
+                    "required": true,
+                    "order": 0
+                },
+                "include_relationships": {
+                    "description": "Include related entities and relationships",
+                    "data_type": "boolean",
+                    "default": false,
+                    "order": 1
+                },
+                "include_indicators": {
+                    "description": "Include associated indicators",
+                    "data_type": "boolean",
+                    "default": true,
+                    "order": 2
+                }
+            },
+            "output": [
+                {
+                    "data_path": "action_result.data.*.enriched_artifacts",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.data.*.not_found_artifacts",
+                    "data_type": "string"
+                },
+                {
+                    "data_path": "action_result.summary.total_artifacts",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.summary.enriched_count",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.summary.not_found_count",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.summary.total_indicators",
+                    "data_type": "numeric"
+                },
+                {
+                    "data_path": "action_result.summary.total_threat_context",
+                    "data_type": "numeric"
                 },
                 {
                     "data_path": "action_result.status",

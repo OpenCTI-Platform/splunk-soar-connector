@@ -1966,6 +1966,774 @@ class OpenCTIConnector(BaseConnector):
                 phantom.APP_ERROR, f"Failed to convert to STIX pattern: {err_msg}"
             )
 
+    def _bulk_create_entities(self, param):
+        """
+        Bulk create entities in OpenCTI
+
+        :param param: Dictionary of input parameters
+        :return: Status (phantom.APP_SUCCESS/phantom.APP_ERROR)
+        """
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        # Get parameters
+        entity_type = param.get("entity_type", "").strip()
+        entities_json = param.get("entities_json", "")
+
+        if not entity_type:
+            return action_result.set_status(
+                phantom.APP_ERROR, "Entity type is required for bulk creation"
+            )
+
+        if not entities_json:
+            return action_result.set_status(
+                phantom.APP_ERROR, "Entities JSON is required for bulk creation"
+            )
+
+        try:
+            # Parse the entities JSON
+            entities = json.loads(entities_json)
+            if not isinstance(entities, list):
+                return action_result.set_status(
+                    phantom.APP_ERROR, "Entities JSON must be a list of entity objects"
+                )
+
+            client = self._create_opencti_client()
+
+            created_entities = []
+            failed_entities = []
+
+            # Process each entity based on type
+            for idx, entity_data in enumerate(entities):
+                try:
+                    created_entity = None
+
+                    if entity_type.lower() == "indicator":
+                        created_entity = client.indicator.create(**entity_data)
+                    elif entity_type.lower() == "observable":
+                        obs_type = entity_data.get("type", "")
+                        obs_value = entity_data.get("value", "")
+                        if obs_type and obs_value:
+                            # Map common observable types
+                            type_mapping = {
+                                "ipv4-addr": "IPv4-Addr",
+                                "ipv6-addr": "IPv6-Addr",
+                                "domain-name": "Domain-Name",
+                                "url": "URL",
+                                "email-addr": "Email-Addr",
+                                "file": "StixFile",
+                                "hostname": "Hostname",
+                            }
+                            mapped_type = type_mapping.get(obs_type.lower(), obs_type)
+                            created_entity = client.stix_cyber_observable.create(
+                                simple_observable_key=mapped_type,
+                                simple_observable_value=obs_value,
+                                simple_observable_description=entity_data.get(
+                                    "description"
+                                ),
+                                x_opencti_score=entity_data.get("score"),
+                                objectLabel=entity_data.get("labels", []),
+                                objectMarking=entity_data.get(
+                                    "marking_definitions", []
+                                ),
+                                createIndicator=entity_data.get(
+                                    "create_indicator", False
+                                ),
+                            )
+                    elif entity_type.lower() == "malware":
+                        created_entity = client.malware.create(**entity_data)
+                    elif entity_type.lower() == "threat-actor":
+                        created_entity = client.threat_actor.create(**entity_data)
+                    elif entity_type.lower() == "intrusion-set":
+                        created_entity = client.intrusion_set.create(**entity_data)
+                    elif entity_type.lower() == "campaign":
+                        created_entity = client.campaign.create(**entity_data)
+                    elif entity_type.lower() == "vulnerability":
+                        created_entity = client.vulnerability.create(**entity_data)
+                    elif entity_type.lower() == "incident":
+                        created_entity = client.incident.create(**entity_data)
+                    elif entity_type.lower() == "report":
+                        created_entity = client.report.create(**entity_data)
+                    elif entity_type.lower() == "grouping":
+                        created_entity = client.grouping.create(**entity_data)
+                    elif entity_type.lower() == "case-incident":
+                        created_entity = client.case_incident.create(**entity_data)
+                    elif entity_type.lower() == "case-rfi":
+                        created_entity = client.case_rfi.create(**entity_data)
+                    elif entity_type.lower() == "case-rft":
+                        created_entity = client.case_rft.create(**entity_data)
+                    else:
+                        failed_entities.append(
+                            {
+                                "index": idx,
+                                "error": f"Unsupported entity type: {entity_type}",
+                                "data": entity_data,
+                            }
+                        )
+                        continue
+
+                    if created_entity:
+                        created_entities.append(created_entity)
+                    else:
+                        failed_entities.append(
+                            {
+                                "index": idx,
+                                "error": "Entity creation returned None",
+                                "data": entity_data,
+                            }
+                        )
+
+                except Exception as e:
+                    failed_entities.append(
+                        {"index": idx, "error": str(e), "data": entity_data}
+                    )
+
+            # Add results
+            action_result.add_data(
+                {
+                    "created_entities": created_entities,
+                    "failed_entities": failed_entities,
+                }
+            )
+
+            action_result.update_summary(
+                {
+                    "total_entities": len(entities),
+                    "created_count": len(created_entities),
+                    "failed_count": len(failed_entities),
+                    "entity_type": entity_type,
+                }
+            )
+
+            if created_entities:
+                msg = f"Successfully created {len(created_entities)}/{len(entities)} {entity_type} entities"
+                if failed_entities:
+                    msg += f" ({len(failed_entities)} failed)"
+                return action_result.set_status(phantom.APP_SUCCESS, msg)
+            else:
+                return action_result.set_status(
+                    phantom.APP_ERROR, f"Failed to create any {entity_type} entities"
+                )
+
+        except json.JSONDecodeError as e:
+            return action_result.set_status(
+                phantom.APP_ERROR, f"Invalid JSON format: {str(e)}"
+            )
+        except Exception as e:
+            err_msg = self._get_error_message_from_exception(e)
+            return action_result.set_status(
+                phantom.APP_ERROR, f"Failed to bulk create entities: {err_msg}"
+            )
+
+    def _bulk_add_to_container(self, param):
+        """
+        Bulk add objects to a container (report, grouping, case)
+
+        :param param: Dictionary of input parameters
+        :return: Status (phantom.APP_SUCCESS/phantom.APP_ERROR)
+        """
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        # Get parameters
+        container_type = param.get("container_type", "").strip()
+        container_id = param.get("container_id", "").strip()
+        object_ids = param.get("object_ids", "")
+
+        if not container_type:
+            return action_result.set_status(
+                phantom.APP_ERROR, "Container type is required"
+            )
+
+        if not container_id:
+            return action_result.set_status(
+                phantom.APP_ERROR, "Container ID is required"
+            )
+
+        if not object_ids:
+            return action_result.set_status(
+                phantom.APP_ERROR, "Object IDs are required"
+            )
+
+        try:
+            # Parse object IDs (can be comma-separated or JSON array)
+            if object_ids.startswith("["):
+                ids_list = json.loads(object_ids)
+            else:
+                ids_list = [id.strip() for id in object_ids.split(",")]
+
+            client = self._create_opencti_client()
+
+            added_objects = []
+            failed_objects = []
+
+            # Process based on container type
+            container_type_lower = container_type.lower()
+
+            for obj_id in ids_list:
+                try:
+                    if container_type_lower == "report":
+                        result = client.report.add_stix_object_or_stix_relationship(
+                            id=container_id, stixObjectOrStixRelationshipId=obj_id
+                        )
+                    elif container_type_lower == "grouping":
+                        result = client.grouping.add_stix_object_or_stix_relationship(
+                            id=container_id, stixObjectOrStixRelationshipId=obj_id
+                        )
+                    elif container_type_lower == "case-incident":
+                        result = (
+                            client.case_incident.add_stix_object_or_stix_relationship(
+                                id=container_id, stixObjectOrStixRelationshipId=obj_id
+                            )
+                        )
+                    elif container_type_lower == "case-rfi":
+                        result = client.case_rfi.add_stix_object_or_stix_relationship(
+                            id=container_id, stixObjectOrStixRelationshipId=obj_id
+                        )
+                    elif container_type_lower == "case-rft":
+                        result = client.case_rft.add_stix_object_or_stix_relationship(
+                            id=container_id, stixObjectOrStixRelationshipId=obj_id
+                        )
+                    else:
+                        failed_objects.append(
+                            {
+                                "object_id": obj_id,
+                                "error": f"Unsupported container type: {container_type}",
+                            }
+                        )
+                        continue
+
+                    if result:
+                        added_objects.append(obj_id)
+                    else:
+                        failed_objects.append(
+                            {"object_id": obj_id, "error": "Failed to add object"}
+                        )
+
+                except Exception as e:
+                    failed_objects.append({"object_id": obj_id, "error": str(e)})
+
+            # Add results
+            action_result.add_data(
+                {
+                    "container_id": container_id,
+                    "container_type": container_type,
+                    "added_objects": added_objects,
+                    "failed_objects": failed_objects,
+                }
+            )
+
+            action_result.update_summary(
+                {
+                    "total_objects": len(ids_list),
+                    "added_count": len(added_objects),
+                    "failed_count": len(failed_objects),
+                    "container_type": container_type,
+                    "container_id": container_id,
+                }
+            )
+
+            if added_objects:
+                msg = f"Successfully added {len(added_objects)}/{len(ids_list)} objects to {container_type}"
+                if failed_objects:
+                    msg += f" ({len(failed_objects)} failed)"
+                return action_result.set_status(phantom.APP_SUCCESS, msg)
+            else:
+                return action_result.set_status(
+                    phantom.APP_ERROR, f"Failed to add any objects to {container_type}"
+                )
+
+        except json.JSONDecodeError as e:
+            return action_result.set_status(
+                phantom.APP_ERROR, f"Invalid JSON format for object IDs: {str(e)}"
+            )
+        except Exception as e:
+            err_msg = self._get_error_message_from_exception(e)
+            return action_result.set_status(
+                phantom.APP_ERROR, f"Failed to bulk add objects: {err_msg}"
+            )
+
+    def _add_object_to_case_incident(self, param):
+        """
+        Add an object to a case incident
+
+        :param param: Dictionary of input parameters
+        :return: Status (phantom.APP_SUCCESS/phantom.APP_ERROR)
+        """
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        case_id = param.get("case_id")
+        object_id = param.get("object_id")
+
+        if not case_id or not object_id:
+            return action_result.set_status(
+                phantom.APP_ERROR, "Case ID and Object ID are required"
+            )
+
+        try:
+            client = self._create_opencti_client()
+            result = client.case_incident.add_stix_object_or_stix_relationship(
+                id=case_id, stixObjectOrStixRelationshipId=object_id
+            )
+
+            if result:
+                action_result.add_data(
+                    {"case_id": case_id, "object_id": object_id, "added": True}
+                )
+                action_result.update_summary({"object_added": True, "case_id": case_id})
+                return action_result.set_status(
+                    phantom.APP_SUCCESS,
+                    f"Successfully added object {object_id} to case incident {case_id}",
+                )
+            else:
+                return action_result.set_status(
+                    phantom.APP_ERROR, f"Failed to add object to case incident"
+                )
+
+        except Exception as e:
+            err_msg = self._get_error_message_from_exception(e)
+            return action_result.set_status(
+                phantom.APP_ERROR, f"Failed to add object to case incident: {err_msg}"
+            )
+
+    def _add_object_to_case_rfi(self, param):
+        """
+        Add an object to a case RFI
+
+        :param param: Dictionary of input parameters
+        :return: Status (phantom.APP_SUCCESS/phantom.APP_ERROR)
+        """
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        case_id = param.get("case_id")
+        object_id = param.get("object_id")
+
+        if not case_id or not object_id:
+            return action_result.set_status(
+                phantom.APP_ERROR, "Case ID and Object ID are required"
+            )
+
+        try:
+            client = self._create_opencti_client()
+            result = client.case_rfi.add_stix_object_or_stix_relationship(
+                id=case_id, stixObjectOrStixRelationshipId=object_id
+            )
+
+            if result:
+                action_result.add_data(
+                    {"case_id": case_id, "object_id": object_id, "added": True}
+                )
+                action_result.update_summary({"object_added": True, "case_id": case_id})
+                return action_result.set_status(
+                    phantom.APP_SUCCESS,
+                    f"Successfully added object {object_id} to case RFI {case_id}",
+                )
+            else:
+                return action_result.set_status(
+                    phantom.APP_ERROR, f"Failed to add object to case RFI"
+                )
+
+        except Exception as e:
+            err_msg = self._get_error_message_from_exception(e)
+            return action_result.set_status(
+                phantom.APP_ERROR, f"Failed to add object to case RFI: {err_msg}"
+            )
+
+    def _add_object_to_case_rft(self, param):
+        """
+        Add an object to a case RFT
+
+        :param param: Dictionary of input parameters
+        :return: Status (phantom.APP_SUCCESS/phantom.APP_ERROR)
+        """
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        case_id = param.get("case_id")
+        object_id = param.get("object_id")
+
+        if not case_id or not object_id:
+            return action_result.set_status(
+                phantom.APP_ERROR, "Case ID and Object ID are required"
+            )
+
+        try:
+            client = self._create_opencti_client()
+            result = client.case_rft.add_stix_object_or_stix_relationship(
+                id=case_id, stixObjectOrStixRelationshipId=object_id
+            )
+
+            if result:
+                action_result.add_data(
+                    {"case_id": case_id, "object_id": object_id, "added": True}
+                )
+                action_result.update_summary({"object_added": True, "case_id": case_id})
+                return action_result.set_status(
+                    phantom.APP_SUCCESS,
+                    f"Successfully added object {object_id} to case RFT {case_id}",
+                )
+            else:
+                return action_result.set_status(
+                    phantom.APP_ERROR, f"Failed to add object to case RFT"
+                )
+
+        except Exception as e:
+            err_msg = self._get_error_message_from_exception(e)
+            return action_result.set_status(
+                phantom.APP_ERROR, f"Failed to add object to case RFT: {err_msg}"
+            )
+
+    def _enrich_artifact(self, param):
+        """
+        Enrich a Splunk artifact by searching for an observable in OpenCTI
+
+        :param param: Dictionary of input parameters
+        :return: Status (phantom.APP_SUCCESS/phantom.APP_ERROR)
+        """
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        # Get parameters
+        artifact_value = param.get("artifact_value", "").strip()
+        artifact_type = param.get("artifact_type", "").strip()
+        include_relationships = param.get("include_relationships", True)
+        include_indicators = param.get("include_indicators", True)
+
+        if not artifact_value:
+            return action_result.set_status(
+                phantom.APP_ERROR, "Artifact value is required"
+            )
+
+        try:
+            client = self._create_opencti_client()
+
+            # Search for the observable
+            observables = client.stix_cyber_observable.list(
+                filters={
+                    "mode": "and",
+                    "filters": [{"key": "value", "values": [artifact_value]}],
+                    "filterGroups": [],
+                },
+                first=10,
+            )
+
+            enrichment_data = {
+                "original_value": artifact_value,
+                "original_type": artifact_type,
+                "observables": [],
+                "indicators": [],
+                "relationships": [],
+                "entities": [],
+                "threat_actors": [],
+                "malware": [],
+                "campaigns": [],
+                "intrusion_sets": [],
+            }
+
+            if observables:
+                for observable in observables:
+                    obs_id = observable.get("id")
+                    obs_data = {
+                        "id": obs_id,
+                        "type": observable.get("entity_type"),
+                        "value": observable.get("observable_value"),
+                        "score": observable.get("x_opencti_score"),
+                        "labels": [
+                            label.get("value")
+                            for label in observable.get("objectLabel", [])
+                        ],
+                        "created_at": observable.get("created_at"),
+                        "updated_at": observable.get("updated_at"),
+                    }
+                    enrichment_data["observables"].append(obs_data)
+
+                    # Get indicators if requested
+                    if include_indicators and obs_id:
+                        indicators = client.stix_cyber_observable.indicators(id=obs_id)
+                        if indicators:
+                            for indicator in indicators:
+                                ind_data = {
+                                    "id": indicator.get("id"),
+                                    "name": indicator.get("name"),
+                                    "pattern": indicator.get("pattern"),
+                                    "valid_from": indicator.get("valid_from"),
+                                    "valid_until": indicator.get("valid_until"),
+                                    "score": indicator.get("x_opencti_score"),
+                                    "labels": [
+                                        label.get("value")
+                                        for label in indicator.get("objectLabel", [])
+                                    ],
+                                }
+                                enrichment_data["indicators"].append(ind_data)
+
+                    # Get relationships if requested
+                    if include_relationships and obs_id:
+                        # Get relationships where this observable is involved
+                        relationships = client.stix_core_relationship.list(
+                            fromId=obs_id, first=50
+                        )
+
+                        for rel in relationships:
+                            rel_data = {
+                                "id": rel.get("id"),
+                                "relationship_type": rel.get("relationship_type"),
+                                "from": rel.get("from", {}).get("id"),
+                                "to": rel.get("to", {}).get("id"),
+                                "to_name": rel.get("to", {}).get("name"),
+                                "to_type": rel.get("to", {}).get("entity_type"),
+                                "confidence": rel.get("confidence"),
+                                "start_time": rel.get("start_time"),
+                                "stop_time": rel.get("stop_time"),
+                            }
+                            enrichment_data["relationships"].append(rel_data)
+
+                            # Categorize related entities
+                            to_entity = rel.get("to", {})
+                            entity_type = to_entity.get("entity_type", "").lower()
+
+                            if "threat-actor" in entity_type:
+                                enrichment_data["threat_actors"].append(
+                                    {
+                                        "id": to_entity.get("id"),
+                                        "name": to_entity.get("name"),
+                                        "description": to_entity.get("description"),
+                                    }
+                                )
+                            elif "malware" in entity_type:
+                                enrichment_data["malware"].append(
+                                    {
+                                        "id": to_entity.get("id"),
+                                        "name": to_entity.get("name"),
+                                        "description": to_entity.get("description"),
+                                    }
+                                )
+                            elif "campaign" in entity_type:
+                                enrichment_data["campaigns"].append(
+                                    {
+                                        "id": to_entity.get("id"),
+                                        "name": to_entity.get("name"),
+                                        "description": to_entity.get("description"),
+                                    }
+                                )
+                            elif "intrusion-set" in entity_type:
+                                enrichment_data["intrusion_sets"].append(
+                                    {
+                                        "id": to_entity.get("id"),
+                                        "name": to_entity.get("name"),
+                                        "description": to_entity.get("description"),
+                                    }
+                                )
+
+            # Convert to Splunk artifact format
+            action_result.add_data(enrichment_data)
+
+            # Update summary
+            action_result.update_summary(
+                {
+                    "enrichment_found": len(enrichment_data["observables"]) > 0,
+                    "observable_count": len(enrichment_data["observables"]),
+                    "indicator_count": len(enrichment_data["indicators"]),
+                    "relationship_count": len(enrichment_data["relationships"]),
+                    "threat_actor_count": len(enrichment_data["threat_actors"]),
+                    "malware_count": len(enrichment_data["malware"]),
+                    "campaign_count": len(enrichment_data["campaigns"]),
+                    "intrusion_set_count": len(enrichment_data["intrusion_sets"]),
+                }
+            )
+
+            if enrichment_data["observables"]:
+                return action_result.set_status(
+                    phantom.APP_SUCCESS,
+                    f"Found {len(enrichment_data['observables'])} observables and "
+                    f"{len(enrichment_data['indicators'])} indicators for {artifact_value}",
+                )
+            else:
+                return action_result.set_status(
+                    phantom.APP_SUCCESS,
+                    f"No enrichment data found for {artifact_value} in OpenCTI",
+                )
+
+        except Exception as e:
+            err_msg = self._get_error_message_from_exception(e)
+            return action_result.set_status(
+                phantom.APP_ERROR, f"Failed to enrich artifact: {err_msg}"
+            )
+
+    def _bulk_enrich_artifacts(self, param):
+        """
+        Bulk enrich multiple Splunk artifacts
+
+        :param param: Dictionary of input parameters
+        :return: Status (phantom.APP_SUCCESS/phantom.APP_ERROR)
+        """
+        action_result = self.add_action_result(ActionResult(dict(param)))
+
+        # Get parameters
+        artifacts_json = param.get("artifacts_json", "")
+        include_relationships = param.get("include_relationships", False)
+        include_indicators = param.get("include_indicators", True)
+
+        if not artifacts_json:
+            return action_result.set_status(
+                phantom.APP_ERROR, "Artifacts JSON is required"
+            )
+
+        try:
+            # Parse artifacts JSON
+            artifacts = json.loads(artifacts_json)
+            if not isinstance(artifacts, list):
+                return action_result.set_status(
+                    phantom.APP_ERROR,
+                    "Artifacts JSON must be a list of artifact objects",
+                )
+
+            client = self._create_opencti_client()
+
+            enriched_artifacts = []
+            not_found_artifacts = []
+
+            for artifact in artifacts:
+                artifact_value = artifact.get("value", "").strip()
+                artifact_type = artifact.get("type", "").strip()
+
+                if not artifact_value:
+                    continue
+
+                try:
+                    # Search for the observable
+                    observables = client.stix_cyber_observable.list(
+                        filters={
+                            "mode": "and",
+                            "filters": [{"key": "value", "values": [artifact_value]}],
+                            "filterGroups": [],
+                        },
+                        first=5,
+                    )
+
+                    if observables:
+                        enrichment = {
+                            "original_value": artifact_value,
+                            "original_type": artifact_type,
+                            "observables": [],
+                            "indicators": [],
+                            "threat_context": [],
+                        }
+
+                        for observable in observables:
+                            obs_id = observable.get("id")
+                            obs_data = {
+                                "id": obs_id,
+                                "type": observable.get("entity_type"),
+                                "value": observable.get("observable_value"),
+                                "score": observable.get("x_opencti_score"),
+                                "labels": [
+                                    label.get("value")
+                                    for label in observable.get("objectLabel", [])
+                                ],
+                            }
+                            enrichment["observables"].append(obs_data)
+
+                            # Get indicators if requested
+                            if include_indicators and obs_id:
+                                indicators = client.stix_cyber_observable.indicators(
+                                    id=obs_id
+                                )
+                                if indicators:
+                                    for indicator in indicators[
+                                        :3
+                                    ]:  # Limit to 3 per observable
+                                        ind_data = {
+                                            "name": indicator.get("name"),
+                                            "pattern": indicator.get("pattern"),
+                                            "score": indicator.get("x_opencti_score"),
+                                        }
+                                        enrichment["indicators"].append(ind_data)
+
+                            # Get minimal threat context if requested
+                            if include_relationships and obs_id:
+                                relationships = client.stix_core_relationship.list(
+                                    fromId=obs_id, first=10
+                                )
+
+                                threat_entities = set()
+                                for rel in relationships:
+                                    to_entity = rel.get("to", {})
+                                    entity_type = to_entity.get(
+                                        "entity_type", ""
+                                    ).lower()
+                                    entity_name = to_entity.get("name")
+
+                                    if entity_name and any(
+                                        t in entity_type
+                                        for t in [
+                                            "threat-actor",
+                                            "malware",
+                                            "campaign",
+                                            "intrusion-set",
+                                        ]
+                                    ):
+                                        threat_entities.add(
+                                            f"{entity_type}: {entity_name}"
+                                        )
+
+                                enrichment["threat_context"] = list(threat_entities)[
+                                    :5
+                                ]  # Limit to 5
+
+                        enriched_artifacts.append(enrichment)
+                    else:
+                        not_found_artifacts.append(
+                            {"value": artifact_value, "type": artifact_type}
+                        )
+
+                except Exception as e:
+                    not_found_artifacts.append(
+                        {
+                            "value": artifact_value,
+                            "type": artifact_type,
+                            "error": str(e),
+                        }
+                    )
+
+            # Add results
+            action_result.add_data(
+                {
+                    "enriched_artifacts": enriched_artifacts,
+                    "not_found_artifacts": not_found_artifacts,
+                }
+            )
+
+            # Update summary
+            total_indicators = sum(len(a["indicators"]) for a in enriched_artifacts)
+            total_threats = sum(len(a["threat_context"]) for a in enriched_artifacts)
+
+            action_result.update_summary(
+                {
+                    "total_artifacts": len(artifacts),
+                    "enriched_count": len(enriched_artifacts),
+                    "not_found_count": len(not_found_artifacts),
+                    "total_indicators": total_indicators,
+                    "total_threat_context": total_threats,
+                }
+            )
+
+            if enriched_artifacts:
+                msg = f"Successfully enriched {len(enriched_artifacts)}/{len(artifacts)} artifacts"
+                if not_found_artifacts:
+                    msg += f" ({len(not_found_artifacts)} not found)"
+                return action_result.set_status(phantom.APP_SUCCESS, msg)
+            else:
+                return action_result.set_status(
+                    phantom.APP_SUCCESS,
+                    f"No enrichment data found for any of the {len(artifacts)} artifacts",
+                )
+
+        except json.JSONDecodeError as e:
+            return action_result.set_status(
+                phantom.APP_ERROR, f"Invalid JSON format: {str(e)}"
+            )
+        except Exception as e:
+            err_msg = self._get_error_message_from_exception(e)
+            return action_result.set_status(
+                phantom.APP_ERROR, f"Failed to bulk enrich artifacts: {err_msg}"
+            )
+
     def _create_label(self, param):
         """
         Create a label in OpenCTI
@@ -2076,6 +2844,16 @@ class OpenCTIConnector(BaseConnector):
             "add_object_to_grouping": self._add_object_to_grouping,
             "create_label": self._create_label,
             "convert_to_stix_pattern": self._convert_to_stix_pattern,
+            # New bulk actions
+            "bulk_create_entities": self._bulk_create_entities,
+            "bulk_add_to_container": self._bulk_add_to_container,
+            # New case actions
+            "add_object_to_case_incident": self._add_object_to_case_incident,
+            "add_object_to_case_rfi": self._add_object_to_case_rfi,
+            "add_object_to_case_rft": self._add_object_to_case_rft,
+            # New enrichment actions
+            "enrich_artifact": self._enrich_artifact,
+            "bulk_enrich_artifacts": self._bulk_enrich_artifacts,
         }
 
         action = action_mapping.get(action_id)

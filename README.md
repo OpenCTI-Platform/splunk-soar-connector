@@ -1,7 +1,7 @@
 # OpenCTI
 
 Publisher: Filigran  
-Connector Version: 1.0.0  
+Connector Version: 1.1.0  
 Product Vendor: Filigran  
 Product Name: OpenCTI  
 Product Version Supported (regex): ".*"  
@@ -42,6 +42,13 @@ VARIABLE | REQUIRED | TYPE | DESCRIPTION
 [add object to report](#action-add-object-to-report) - Add an object to an existing report  
 [add object to grouping](#action-add-object-to-grouping) - Add an object to an existing grouping  
 [create label](#action-create-label) - Create a new label in OpenCTI with predictive color generation  
+[bulk create entities](#action-bulk-create-entities) - Bulk create multiple entities of the same type in OpenCTI  
+[bulk add to container](#action-bulk-add-to-container) - Bulk add multiple objects to a container (report, grouping, or case)  
+[add object to case incident](#action-add-object-to-case-incident) - Add an object to a case incident  
+[add object to case rfi](#action-add-object-to-case-rfi) - Add an object to a case RFI (Request for Information)  
+[add object to case rft](#action-add-object-to-case-rft) - Add an object to a case RFT (Request for Takedown)  
+[enrich artifact](#action-enrich-artifact) - Enrich a Splunk artifact by searching for an observable in OpenCTI  
+[bulk enrich artifacts](#action-bulk-enrich-artifacts) - Bulk enrich multiple Splunk artifacts by searching for observables in OpenCTI  
 
 ## action: 'test connectivity'
 Validate the asset configuration for connectivity using supplied configuration
@@ -676,6 +683,184 @@ action_result.summary.label_color | string |  | #FF6B6B
 action_result.message | string |  | Successfully created label 'malware' with color #FF6B6B
 summary.total_objects | numeric |  | 1
 summary.total_objects_successful | numeric |  | 1
+
+## action: 'bulk create entities'
+Bulk create multiple entities of the same type in OpenCTI
+
+Type: **generic**  
+Read only: **False**
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**entity_type** | required | Type of entities to create (indicator, observable, malware, threat-actor, etc.) | string | 
+**entities_json** | required | JSON array of entity objects to create | string | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  | success failed
+action_result.parameter.entity_type | string |  | observable
+action_result.data.\*.created_entities | string |  | 
+action_result.data.\*.failed_entities | string |  | 
+action_result.summary.total_entities | numeric |  | 10
+action_result.summary.created_count | numeric |  | 8
+action_result.summary.failed_count | numeric |  | 2
+action_result.summary.entity_type | string |  | observable
+action_result.message | string |  | Successfully created 8/10 observable entities (2 failed)
+
+## action: 'bulk add to container'
+Bulk add multiple objects to a container (report, grouping, or case)
+
+Type: **generic**  
+Read only: **False**
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**container_type** | required | Type of container (report, grouping, case-incident, case-rfi, case-rft) | string | 
+**container_id** | required | ID of the container | string | 
+**object_ids** | required | Comma-separated list or JSON array of object IDs to add | string | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  | success failed
+action_result.parameter.container_type | string |  | report
+action_result.parameter.container_id | string |  | report--abc123
+action_result.data.\*.added_objects | string |  | 
+action_result.data.\*.failed_objects | string |  | 
+action_result.summary.total_objects | numeric |  | 5
+action_result.summary.added_count | numeric |  | 5
+action_result.summary.failed_count | numeric |  | 0
+action_result.message | string |  | Successfully added 5/5 objects to report
+
+## action: 'add object to case incident'
+Add an object to a case incident
+
+Type: **generic**  
+Read only: **False**
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**case_id** | required | ID of the case incident | string | 
+**object_id** | required | ID of the object to add | string | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  | success failed
+action_result.parameter.case_id | string |  | case-incident--abc123
+action_result.parameter.object_id | string |  | indicator--def456
+action_result.data.\*.added | boolean |  | True
+action_result.summary.object_added | boolean |  | True
+action_result.message | string |  | Successfully added object to case incident
+
+## action: 'add object to case rfi'
+Add an object to a case RFI (Request for Information)
+
+Type: **generic**  
+Read only: **False**
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**case_id** | required | ID of the case RFI | string | 
+**object_id** | required | ID of the object to add | string | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  | success failed
+action_result.parameter.case_id | string |  | case-rfi--abc123
+action_result.parameter.object_id | string |  | malware--def456
+action_result.data.\*.added | boolean |  | True
+action_result.summary.object_added | boolean |  | True
+action_result.message | string |  | Successfully added object to case RFI
+
+## action: 'add object to case rft'
+Add an object to a case RFT (Request for Takedown)
+
+Type: **generic**  
+Read only: **False**
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**case_id** | required | ID of the case RFT | string | 
+**object_id** | required | ID of the object to add | string | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  | success failed
+action_result.parameter.case_id | string |  | case-rft--abc123
+action_result.parameter.object_id | string |  | threat-actor--def456
+action_result.data.\*.added | boolean |  | True
+action_result.summary.object_added | boolean |  | True
+action_result.message | string |  | Successfully added object to case RFT
+
+## action: 'enrich artifact'
+Enrich a Splunk artifact by searching for an observable in OpenCTI and retrieving associated objects
+
+Type: **investigate**  
+Read only: **True**
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**artifact_value** | required | Value of the artifact to enrich (IP, domain, hash, etc.) | string | `ip` `domain` `url` `hash` `email`
+**artifact_type** | optional | Type of the artifact | string | 
+**include_relationships** | optional | Include related entities and relationships (default: true) | boolean | 
+**include_indicators** | optional | Include associated indicators (default: true) | boolean | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  | success failed
+action_result.parameter.artifact_value | string | `ip` `domain` `url` `hash` `email` | 192.168.1.1
+action_result.parameter.artifact_type | string |  | ip
+action_result.data.\*.observables | string |  | 
+action_result.data.\*.indicators | string |  | 
+action_result.data.\*.relationships | string |  | 
+action_result.data.\*.threat_actors | string |  | 
+action_result.data.\*.malware | string |  | 
+action_result.data.\*.campaigns | string |  | 
+action_result.data.\*.intrusion_sets | string |  | 
+action_result.summary.enrichment_found | boolean |  | True
+action_result.summary.observable_count | numeric |  | 1
+action_result.summary.indicator_count | numeric |  | 3
+action_result.summary.relationship_count | numeric |  | 5
+action_result.summary.threat_actor_count | numeric |  | 2
+action_result.summary.malware_count | numeric |  | 1
+action_result.message | string |  | Found 1 observables and 3 indicators for 192.168.1.1
+
+## action: 'bulk enrich artifacts'
+Bulk enrich multiple Splunk artifacts by searching for observables in OpenCTI
+
+Type: **investigate**  
+Read only: **True**
+
+#### Action Parameters
+PARAMETER | REQUIRED | DESCRIPTION | TYPE | CONTAINS
+--------- | -------- | ----------- | ---- | --------
+**artifacts_json** | required | JSON array of artifact objects with 'value' and optional 'type' fields | string | 
+**include_relationships** | optional | Include related entities and relationships (default: false) | boolean | 
+**include_indicators** | optional | Include associated indicators (default: true) | boolean | 
+
+#### Action Output
+DATA PATH | TYPE | CONTAINS | EXAMPLE VALUES
+--------- | ---- | -------- | --------------
+action_result.status | string |  | success failed
+action_result.data.\*.enriched_artifacts | string |  | 
+action_result.data.\*.not_found_artifacts | string |  | 
+action_result.summary.total_artifacts | numeric |  | 20
+action_result.summary.enriched_count | numeric |  | 15
+action_result.summary.not_found_count | numeric |  | 5
+action_result.summary.total_indicators | numeric |  | 45
+action_result.summary.total_threat_context | numeric |  | 12
+action_result.message | string |  | Successfully enriched 15/20 artifacts (5 not found)
 
 ---
 Auto-generated Splunk SOAR Connector documentation.
