@@ -17,3 +17,6 @@ black
 *.crt
 .env
 .pytest_cache
+
+# Keep the GitHub issue template chooser config (the bare config.yml rule above would otherwise ignore it)
+!.github/ISSUE_TEMPLATE/config.yml
