@@ -33,6 +33,7 @@ sys.path.insert(
 import phantom.app as phantom
 from phantom.action_result import ActionResult
 from phantom.base_connector import BaseConnector
+from webhooks import opencti_event_handler
 
 # OpenCTI imports
 from pycti import (
@@ -228,6 +229,25 @@ class OpenCTIConnector(BaseConnector):
         # Save the state
         self.save_state(self._state)
         return phantom.APP_SUCCESS
+
+    def handle_request(self, request, path_parts):
+        """
+        Webhook entrypoint (port 3500).
+
+        URL shape is typically:
+        /webhook/<package_name>/<asset_name>/<endpoint>
+
+        We dispatch on the last path part (endpoint).
+        """
+        endpoint = path_parts[-1] if path_parts else ""
+
+        if endpoint == "event":
+            return opencti_event_handler(self, request, path_parts)
+
+        return {
+            "success": False,
+            "message": f"Unknown webhook endpoint: {endpoint}",
+        }, 404
 
     def _create_opencti_client(self):
         """
